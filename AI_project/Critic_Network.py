@@ -13,6 +13,8 @@ class CriticNetwork(nn.Module):
         super(CriticNetwork, self).__init__()
 
         self.checkpoint_file = os.path.join(chkpt_dir, 'critic_torch_ppo')
+
+        # approx value f(x); telling actor how good each action is based on whether or not resulting state is valuable
         self.critic = nn.Sequential(nn.Linear(*input_dims, fc1_dims),  # *: to unpack list into separate elements; 1st layer
                                     nn.ReLU(),  # f(x) = max(0, x); f(x)=0 for neg x and f(x)=x for pos x; default act. f(x)
                                     nn.Linear(fc1_dims, fc2_dims),  # y = Wx + b; initializes random b w/ matrix out_features * 1 then W matrix out_features * in_features w/ random elements

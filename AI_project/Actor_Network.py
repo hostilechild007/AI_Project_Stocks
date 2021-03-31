@@ -17,6 +17,7 @@ class ActorNetwork(nn.Module):
 
         self.checkpoint_file = os.path.join(chkpt_dir, 'actor_torch_ppo')
 
+        # Deep Neural Network that approx agent's policy which is a prob dist over set of actions for each state
         # all stuff in Sequential are layers
         # input layer -> activation f(x) -> hidden layer -> activation f(x) -> hidden layer -> activation f(x) -> last layer -> activation f(x)
         # activation f(x) w/ non-linear transformations so network can learn better & perform more complex tasks
@@ -36,7 +37,7 @@ class ActorNetwork(nn.Module):
     # takes a single state or batch of states to
     def forward(self, state):
         distribution = self.actor(state)  # get distribution of actions
-        distribution = Categorical(distribution)  # ???????
+        distribution = Categorical(distribution)  # use categorical dist cuz dealing w/ discrete action spaces
 
         return distribution
 

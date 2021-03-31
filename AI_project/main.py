@@ -9,10 +9,10 @@ if __name__ == '__main__':
     N = 20
     batch_size = 5
     n_epochs = 4
-    alpha = 0.0003
+    alpha = 0.0003  # learning rate
     agent = Agent(n_actions=env.action_space.n, batch_size=batch_size, alpha=alpha, n_epochs=n_epochs,
                   input_dims=env.observation_space.shape)
-    n_games = 300
+    n_games = 300  # episodes so have starting and terminal state so can end
 
     best_score = env.reward_range[0]
     score_history = []
@@ -21,11 +21,13 @@ if __name__ == '__main__':
     avg_score = 0
     n_steps = 0  # used to know when it's time to perform learning f(x)
 
-    for i in range(n_games):  # for every episode....
+    for episode in range(n_games):  # for every episode....
         observation = env.reset()  # reset environment state and returns initial state
-        done = False  # set terminal flag
-        score = 0
+        done = False  # reset terminal flag
+        score = 0  # reset score
+
         while not done:
+            # select action accord to actor network
             action, prob, val = agent.choose_action(observation)
 
             # apply action to environment, returns next state, reward, & whether or not episode reached terminal state
@@ -48,7 +50,7 @@ if __name__ == '__main__':
             best_score = avg_score
             agent.save_models()
 
-        print('episode', i, 'score %.1f' % score, 'avg score %.1f' % avg_score,
+        print('episode', episode, 'score %.1f' % score, 'avg score %.1f' % avg_score,
               'time_steps', n_steps, 'learning_steps', learn_iters)
 
     # plot shit

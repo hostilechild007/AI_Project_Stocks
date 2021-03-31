@@ -43,11 +43,13 @@ class Agent:
         # convert numpy array to Torch Tensor (multi-dimensional matrix containing elements of a single data type)
         state = T.tensor([observation], dtype=T.float).to(self.actor.device)
 
-        dist = self.actor(state)  # gives distribution for choosing an action
+        dist = self.actor(state)  # gets prob distribution for choosing an action
         value = self.critic(state)
-        action = dist.sample()
+        action = dist.sample()  # select an action by sampling distribution
 
         # get rid of dimensions of size 1; example: if input shape Dim = A*1*B*C*1 ==> squeeze(Dim) = A*B*C
+        # and loss works best if a scalar
+        # do log_prob() for loss f(x) later
         probs = T.squeeze(dist.log_prob(action)).item()  # .item() gives an int
         action = T.squeeze(action).item()
         value = T.squeeze(value).item()
@@ -65,12 +67,14 @@ class Agent:
                 a_t = 0  # the Advantage
 
                 for k in range(t, len(rewards_arr) - 1):
-                    # (1 - int(dones_arr[k])) added for convention
+                    # (1 - int(dones_arr[k])) cuz val of term state = 0 and no returns/rewards in terminal state
                     delta = rewards_arr[k] + self.gamma * vals_arr[k+1] * (1 - int(dones_arr[k])) - vals_arr[k]
                     a_t += discount * delta
                     discount *= self.gamma * self.gae_lambda
 
                 advantage[t] = a_t
+
+            # use delta and stuff to update actor and critic net; but where??????
 
             advantage = T.tensor(advantage).to(self.actor.device)
 
@@ -85,7 +89,7 @@ class Agent:
                 critic_value = self.critic(states)
                 critic_value = T.squeeze(critic_value)
 
-                new_probs = dist.log_prob(actions)
+                new_probs = dist.log_prob(actions)  # actor cost f(x) for new action
                 prob_ratio = new_probs.exp() / old_probs.exp()  # old_probs.exp() = e^(old_probs)
 
                 " Clipped Surrogate Objective "
