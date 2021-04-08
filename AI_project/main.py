@@ -1,20 +1,41 @@
 import gym  # toolkit for developing and comparing reinforcement learning algorithms
 import numpy as np
-from AI_project.Agent import Agent
+from AI_Project_Stocks.AI_project.Agent import Agent
 import matplotlib.pyplot as plt
-
+from stable_baselines.common.vec_env import DummyVecEnv
+from StockTradingEnv import StockTradingEnv
+import yfinance as yf
+import pandas as pd
+from stable_baselines.common.env_checker import check_env
+from stable_baselines.common.cmd_util import make_vec_env
 
 if __name__ == '__main__':
-    env = gym.make('CartPole-v0')  # create cartpole environment & can use to interact w/ envir & simulate random shit
+
+    # stock_dtf = yf.download('SPY',
+    #                         start='2020-12-31',
+    #                         end='2021-01-31',
+    #                         progress=False)
+    # df = pd.DataFrame(stock_dtf)
+    df = pd.read_csv('./AAPL.csv')
+    df = df.sort_values('Date')
+    # The algorithms require a vectorized environment to run
+    env = StockTradingEnv(df)
+    #env = DummyVecEnv([lambda: env])
+    #check_env(env, warn=True)
+    # env = gym.make('CartPole-v0')  # create cartpole environment & can use to interact w/ envir & simulate random shit
     N = 20
     batch_size = 5
     n_epochs = 4
     alpha = 0.0003  # learning rate
-    agent = Agent(n_actions=env.action_space.n, batch_size=batch_size, alpha=alpha, n_epochs=n_epochs,
+    # print(env.action_space.high.max)
+    # print(env.observation_space.shape)
+    agent = Agent(n_actions=3, batch_size=batch_size, alpha=alpha, n_epochs=n_epochs,
                   input_dims=env.observation_space.shape)
+    # agent = Agent(n_actions=3, batch_size=batch_size, alpha=alpha, n_epochs=n_epochs,
+    #               input_dims=(6,6))
     n_games = 300  # episodes so have starting and terminal state so can end
 
-    best_score = env.reward_range[0]
+    # best_score = env.reward_range[0]
     score_history = []
 
     learn_iters = 0
@@ -29,6 +50,7 @@ if __name__ == '__main__':
         while not done:
             # select action accord to actor network
             action, prob, val = agent.choose_action(observation)
+            print(action)
 
             # apply action to environment, returns next state, reward, & whether or not episode reached terminal state
             observation_, reward, done, info = env.step(action)
@@ -46,9 +68,9 @@ if __name__ == '__main__':
         score_history.append(score)
         avg_score = np.mean(score_history[-100:])  # calc mean of previous 100 games
 
-        if avg_score > best_score:
-            best_score = avg_score
-            agent.save_models()
+        # if avg_score > best_score:
+        #     best_score = avg_score
+        #     agent.save_models()
 
         print('episode', episode, 'score %.1f' % score, 'avg score %.1f' % avg_score,
               'time_steps', n_steps, 'learning_steps', learn_iters)

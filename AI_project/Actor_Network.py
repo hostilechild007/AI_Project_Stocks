@@ -12,7 +12,7 @@ class ActorNetwork(nn.Module):
     # fc1_dims: fully connected dims for 1st layer
     # fc2_dims: ... for 2nd layer
     # chkpt_dir: checkpoint directory
-    def __init__(self, n_actions, input_dims, alpha, fc1_dims=256, fc2_dims=256, chkpt_dir=''):
+    def __init__(self, n_actions, input_dims, alpha, fc1_dims=6, fc2_dims=6, chkpt_dir=''):
         super(ActorNetwork, self).__init__()  # calls super class's init method
 
         self.checkpoint_file = os.path.join(chkpt_dir, 'actor_torch_ppo')

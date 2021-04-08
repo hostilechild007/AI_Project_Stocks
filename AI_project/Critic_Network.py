@@ -9,7 +9,7 @@ from torch.distributions.categorical import Categorical
 class CriticNetwork(nn.Module):
     # don't need actions b/c it outputs the value of a particular state
     # doesn't care how many actions there are in action space
-    def __init__(self, input_dims, alpha, fc1_dims=256, fc2_dims=256, chkpt_dir=''):
+    def __init__(self, input_dims, alpha, fc1_dims=6, fc2_dims=6, chkpt_dir=''):
         super(CriticNetwork, self).__init__()
 
         self.checkpoint_file = os.path.join(chkpt_dir, 'critic_torch_ppo')

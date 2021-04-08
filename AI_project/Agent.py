@@ -4,9 +4,9 @@ import torch as T
 import torch.nn as nn
 import torch.optim as optim
 from torch.distributions.categorical import Categorical
-from AI_project.Actor_Network import ActorNetwork
-from AI_project.Critic_Network import CriticNetwork
-from AI_project.PPO_Memory import PPOMemory
+from AI_Project_Stocks.AI_project.Actor_Network import ActorNetwork
+from AI_Project_Stocks.AI_project.Critic_Network import CriticNetwork
+from AI_Project_Stocks.AI_project.PPO_Memory import PPOMemory
 
 
 class Agent:
@@ -50,9 +50,9 @@ class Agent:
         # get rid of dimensions of size 1; example: if input shape Dim = A*1*B*C*1 ==> squeeze(Dim) = A*B*C
         # and loss works best if a scalar
         # do log_prob() for loss f(x) later
-        probs = T.squeeze(dist.log_prob(action)).item()  # .item() gives an int
-        action = T.squeeze(action).item()
-        value = T.squeeze(value).item()
+        probs = T.squeeze(dist.log_prob(action)).detach().numpy()  # .item() gives an int
+        action = T.squeeze(action).detach().numpy()
+        value = T.squeeze(value).detach().numpy()
 
         return action, probs, value
 

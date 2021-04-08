@@ -150,3 +150,7 @@ class StockTradingEnv(gym.Env):
         print(
             f'Net worth: {self.net_worth} (Max net worth: {self.max_net_worth})')
         print(f'Profit: {profit}')
+
+
+    def close(self):
+        pass
