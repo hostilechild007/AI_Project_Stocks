@@ -9,15 +9,25 @@ from AI_project.StockMarketEnv import StockMarketEnv
 
 
 if __name__ == '__main__':
+    stock_history_table = yf.Ticker("AAPL").history(period="max")
+    stock_history_table.reset_index(inplace=True)
+    stock_history_table.drop("Date", axis=1, inplace=True)
+    print(stock_history_table.head())
+    print("rows ", len(stock_history_table.index))
+    print(np.subtract(range(0, 201), 100))
 
-    env = gym.make('CartPole-v0')  # create cartpole environment & can use to interact w/ envir & simulate random shit
+
+    # print(stock_history_table.loc[:, "Open"])
+    # stock_history_table = pd.read_csv('HDB.csv')
+    env = StockMarketEnv(stock_history_table)
+
     N = 20
     batch_size = 5
     n_epochs = 4
     alpha = 0.0003  # learning rate
     agent = Agent(n_actions=env.action_space.n, batch_size=batch_size, alpha=alpha, n_epochs=n_epochs,
                   input_dims=env.observation_space.shape)
-    n_games = 300  # episodes so have starting and terminal state so can end
+    n_games = 200  # episodes so have starting and terminal state so can end
     print("start observation space: ", env.observation_space)
 
     best_score = env.reward_range[0]
@@ -43,6 +53,7 @@ if __name__ == '__main__':
             # apply action to environment, returns next state, reward, & whether or not episode reached terminal state
             observation_, reward, done, info = env.step(action)
             print("reward: ", reward)
+            # print("observation_: ", observation_)
             n_steps += 1  # every time we take an action...
             score += reward
             agent.remember(observation, action, prob, val, reward, done)  # acts as storing batches in a replay buffer
@@ -65,6 +76,7 @@ if __name__ == '__main__':
               'time_steps', n_steps, 'learning_steps', learn_iters)
 
     # plot shit
+    print("FINISHED!!!!!")
 
     x = [i+1 for i in range(len(score_history))]  # x-axis for plot
     running_avg = np.zeros(len(score_history))
