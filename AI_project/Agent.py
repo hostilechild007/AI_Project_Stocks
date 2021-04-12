@@ -41,16 +41,19 @@ class Agent:
 
     def choose_action(self, observation):
         # convert numpy array to Torch Tensor (multi-dimensional matrix containing elements of a single data type)
+        # Note: any .tensor(np_array).to(device) converts np to torch in CPU or GPU device
         state = T.tensor([observation], dtype=T.float).to(self.actor.device)
 
+        print("state in choose_action(): ", state)
         dist = self.actor(state)  # gets prob distribution for choosing an action
+        print("distributions: ", dist.probs)
         value = self.critic(state)
         action = dist.sample()  # select an action by sampling distribution
 
         # get rid of dimensions of size 1; example: if input shape Dim = A*1*B*C*1 ==> squeeze(Dim) = A*B*C
         # and loss works best if a scalar
         # do log_prob() for loss f(x) later
-        probs = T.squeeze(dist.log_prob(action)).item()  # .item() gives an int
+        probs = T.squeeze(dist.log_prob(action)).item()  # .item() gives an int; moves data back to CPU
         action = T.squeeze(action).item()
         value = T.squeeze(value).item()
 
@@ -60,25 +63,26 @@ class Agent:
         for _ in range(self.n_epochs):
             states_arr, actions_arr, old_probs_arr, vals_arr, rewards_arr, dones_arr, batches = self.memory.generate_batches()
 
-            advantage = np.zeros(len(rewards_arr), dtype=np.float32)
+            advantage = np.zeros(len(rewards_arr), dtype=np.float32)  # stores gae's
 
             for t in range(len(rewards_arr) - 1):
                 discount = 1
                 a_t = 0  # the Advantage
 
                 for k in range(t, len(rewards_arr) - 1):
-                    # (1 - int(dones_arr[k])) cuz val of term state = 0 and no returns/rewards in terminal state
+                    # mask = (1 - int(dones_arr[k])) cuz val of term state = 0 and no returns/rewards in terminal state
+                    # otherwise, mask = 1 cuz not terminal state
                     delta = rewards_arr[k] + self.gamma * vals_arr[k+1] * (1 - int(dones_arr[k])) - vals_arr[k]
                     a_t += discount * delta
                     discount *= self.gamma * self.gae_lambda
 
                 advantage[t] = a_t
 
-            # use delta and stuff to update actor and critic net; but where??????
-
             advantage = T.tensor(advantage).to(self.actor.device)
 
             values = T.tensor(vals_arr).to(self.actor.device)
+
+            # note: batch = an array with random indices
             for batch in batches:
                 states = T.tensor(states_arr[batch], dtype=T.float).to(self.actor.device)
                 actions = T.tensor(actions_arr[batch]).to(self.actor.device)
@@ -89,8 +93,8 @@ class Agent:
                 critic_value = self.critic(states)
                 critic_value = T.squeeze(critic_value)
 
-                new_probs = dist.log_prob(actions)  # actor cost f(x) for new action
-                prob_ratio = new_probs.exp() / old_probs.exp()  # old_probs.exp() = e^(old_probs)
+                new_probs = dist.log_prob(actions)  # actor cost f(x) for new action; take log prob cuz no underflow err
+                prob_ratio = new_probs.exp() / old_probs.exp()  # old_probs.exp() = e^(old_probs) cuz put in log space
 
                 " Clipped Surrogate Objective "
                 # L ^ CLIP (theta)
@@ -99,22 +103,27 @@ class Agent:
                 actor_loss = -T.min(weighted_probs, weighted_clipped_probs).mean()
 
                 # L ^ VF (theta) aka critic loss
-                returns = advantage[batch] + values[batch]
+                returns = advantage[batch] + values[batch]  # gae + V(s)
                 critic_loss = (returns - critic_value)**2
                 critic_loss = critic_loss.mean()
 
-                total_loss = actor_loss + .5*critic_loss  # cuz gradient ascent
+                # don't need to add entropy cuz have 2 separate NN for actor & critic
+                total_loss = actor_loss + .5*critic_loss
 
+                # Note: optimizer is connected to .backward() cuz of the input self.parameters()
                 # clears x.grad for every parameter x in the optimizer
                 self.actor.optimizer.zero_grad()
                 self.critic.optimizer.zero_grad()
                 # important to call this before loss.backward(),
                 # otherwise you’ll accumulate the gradients from multiple passes
 
+                # update gradients by backprop the calculated loss f(x)
                 total_loss.backward()  # computes d/dx(total_loss) for every parameter x which has requires_grad=True
 
-                # updates the value of x using the gradient x.grad
+                # updates the value of x using the gradient x.grad (gradient descent)
                 self.actor.optimizer.step()
                 self.critic.optimizer.step()
+
+                # gradient descent combined with backprop so can make efficient updates
 
         self.memory.clear_memory()

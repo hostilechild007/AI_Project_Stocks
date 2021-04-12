@@ -22,9 +22,9 @@ class ActorNetwork(nn.Module):
         # input layer -> activation f(x) -> hidden layer -> activation f(x) -> hidden layer -> activation f(x) -> last layer -> activation f(x)
         # activation f(x) w/ non-linear transformations so network can learn better & perform more complex tasks
         self.actor = nn.Sequential(nn.Linear(*input_dims, fc1_dims),  # *: to unpack list into separate elements; 1st layer; nn.Linear(in_features, out_features)
-                                   nn.ReLU(),  # f(x) = max(0, x); f(x)=0 for neg x and f(x)=x for pos x; default act. f(x)
+                                   nn.LeakyReLU(),  # f(x) = max(0, x); f(x)=0 for neg x and f(x)=x for pos x; default act. f(x)
                                    nn.Linear(fc1_dims, fc2_dims),  # y = Wx + b; initializes random b w/ matrix out_features * 1 then W matrix out_features * in_features w/ random elements
-                                   nn.ReLU(),
+                                   nn.LeakyReLU(),
                                    nn.Linear(fc2_dims, n_actions),  # to find y, fc=nn.Linear(...) ==> y = fc(x)
                                    nn.Softmax(dim=-1)  # squash inputs to probability outputs [0, 1]; used for last layer in multi class classification problems
                                    )

@@ -16,9 +16,9 @@ class CriticNetwork(nn.Module):
 
         # approx value f(x); telling actor how good each action is based on whether or not resulting state is valuable
         self.critic = nn.Sequential(nn.Linear(*input_dims, fc1_dims),  # *: to unpack list into separate elements; 1st layer
-                                    nn.ReLU(),  # f(x) = max(0, x); f(x)=0 for neg x and f(x)=x for pos x; default act. f(x)
+                                    nn.LeakyReLU(),  # f(x) = max(0, x); f(x)=0 for neg x and f(x)=x for pos x; default act. f(x)
                                     nn.Linear(fc1_dims, fc2_dims),  # y = Wx + b; initializes random b w/ matrix out_features * 1 then W matrix out_features * in_features w/ random elements
-                                    nn.ReLU(),
+                                    nn.LeakyReLU(),
                                     nn.Linear(fc2_dims, 1)  # to find y, fc=nn.Linear(...) ==> y = fc(x))
                                     )
 

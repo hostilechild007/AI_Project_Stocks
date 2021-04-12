@@ -74,12 +74,16 @@ class StockMarketEnv(Env):
             self.state[1] += min(action, shares_able_to_buy)
 
     def step(self, action):
-        self.terminal = bool(self.day > self.total_days or
+        self.day += 1
+
+        self.terminal = bool(self.day >= self.total_days or
                              self.day % days_per_month == 0 or
                              (self.state[0] == 0 and self.state[1] == 0)
                              )
 
         if self.terminal:
+            if self.day >= self.total_days:
+                self.day = 0
             return np.array(self.state), self.reward, self.terminal, {}
 
         else:
@@ -94,7 +98,9 @@ class StockMarketEnv(Env):
             elif action > 0:
                 self.__buy_stocks(action)
 
-            self.day += 1
+            # self.day += 1
+            print("self.day: ", self.day)
+            print("self.total_days: ", self.total_days)
             stock_row_data = self.stock_history_table.iloc[self.day, :]
             hlc_avg = (stock_row_data.loc["High"] + stock_row_data.loc["Low"] + stock_row_data.loc["Close"]) / 3
             self.state = [self.state[0]] + \
@@ -113,6 +119,8 @@ class StockMarketEnv(Env):
     def reset(self):
         self.reward = 0
         self.terminal = False
+        if self.day >= self.total_days:
+            self.day = 0
         self.day += 1
         stock_row_data = self.stock_history_table.iloc[self.day, :]
         hlc_avg = (stock_row_data.loc["High"] + stock_row_data.loc["Low"] + stock_row_data.loc["Close"]) / 3
