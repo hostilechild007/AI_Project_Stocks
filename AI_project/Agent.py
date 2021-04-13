@@ -44,7 +44,6 @@ class Agent:
         # Note: any .tensor(np_array).to(device) converts np to torch in CPU or GPU device
         state = T.tensor([observation], dtype=T.float).to(self.actor.device)
 
-        print("state in choose_action(): ", state)
         dist = self.actor(state)  # gets prob distribution for choosing an action
         print("distributions: ", dist.probs)
         value = self.critic(state)
@@ -109,6 +108,7 @@ class Agent:
 
                 # don't need to add entropy cuz have 2 separate NN for actor & critic
                 total_loss = actor_loss + .5*critic_loss
+                print("total_loss: ", total_loss)
 
                 # Note: optimizer is connected to .backward() cuz of the input self.parameters()
                 # clears x.grad for every parameter x in the optimizer

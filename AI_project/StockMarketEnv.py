@@ -8,15 +8,15 @@ from gym.utils import seeding
 
 # shares normalization factor
 # 100 shares per trade
-HMAX_NORMALIZE = 1
+HMAX_NORMALIZE = 2
 # initial amount of money we have in our account
-INITIAL_ACCOUNT_BALANCE = 20
+INITIAL_ACCOUNT_BALANCE = 100
 # initial amount of shares we have in our account
 INITIAL_SHARES = 0
 # types of stocks we have
 STOCK_DIM = 1
 # rewards will be too high so lower it
-REWARD_SCALING = 1
+REWARD_SCALING = 10
 # transaction fee: 1/1000 reasonable percentage
 TRANSACTION_FEE_PERCENT = 0.001
 # quarterly days to determine when account should reset
@@ -46,7 +46,8 @@ class StockMarketEnv(Env):
         self.observation_space = Box(low=0, high=np.inf, shape=(3,))
 
         self.day = 0
-        self.total_days = len(self.stock_history_table.index)
+        # self.total_days = len(self.stock_history_table.index)
+        self.total_days = 2000
         stock_row_data = self.stock_history_table.iloc[self.day, :]
         hlc_avg = (stock_row_data.loc["High"] + stock_row_data.loc["Low"] + stock_row_data.loc["Close"]) / 3
         self.state = [INITIAL_ACCOUNT_BALANCE] + \
@@ -61,7 +62,6 @@ class StockMarketEnv(Env):
     # action < 0
     def __sell_stocks(self, action):
         if self.state[1] > 0:  # if account has shares to sell
-
             # take min b/c the shares NN want to sell may be > the amount of shares we have
             self.state[0] += self.state[2] * min(abs(action), self.state[1]) * (1 - TRANSACTION_FEE_PERCENT)
             self.state[1] -= min(abs(action), self.state[1])
@@ -77,17 +77,18 @@ class StockMarketEnv(Env):
         self.day += 1
 
         self.terminal = bool(self.day >= self.total_days or
-                             self.day % days_per_month == 0 or
+                             # self.day % days_per_month == 0 or
                              (self.state[0] == 0 and self.state[1] == 0)
                              )
 
         if self.terminal:
-            if self.day >= self.total_days:
-                self.day = 0
+            # if self.day >= self.total_days:
+            #     self.day = 0
             return np.array(self.state), self.reward, self.terminal, {}
 
         else:
             action -= HMAX_NORMALIZE  # {-k,…,-1, 0, 1, …, k} where k is an (int) action
+            # !!!!!try implementing a EPLSION ENTROY THING HERE!!!!
             print("action: ", action)
 
             # = balance + shares * stock price
@@ -99,8 +100,7 @@ class StockMarketEnv(Env):
                 self.__buy_stocks(action)
 
             # self.day += 1
-            print("self.day: ", self.day)
-            print("self.total_days: ", self.total_days)
+
             stock_row_data = self.stock_history_table.iloc[self.day, :]
             hlc_avg = (stock_row_data.loc["High"] + stock_row_data.loc["Low"] + stock_row_data.loc["Close"]) / 3
             self.state = [self.state[0]] + \
@@ -119,9 +119,10 @@ class StockMarketEnv(Env):
     def reset(self):
         self.reward = 0
         self.terminal = False
-        if self.day >= self.total_days:
-            self.day = 0
-        self.day += 1
+        # if self.day >= self.total_days:
+        #     self.day = 0
+        # self.day += 1
+        self.day = 0
         stock_row_data = self.stock_history_table.iloc[self.day, :]
         hlc_avg = (stock_row_data.loc["High"] + stock_row_data.loc["Low"] + stock_row_data.loc["Close"]) / 3
         self.state = [INITIAL_ACCOUNT_BALANCE] + \

@@ -5,6 +5,8 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.distributions.categorical import Categorical
 
+T.random.manual_seed(0)
+
 
 class ActorNetwork(nn.Module):
     # n_actions: number of actions
@@ -25,6 +27,8 @@ class ActorNetwork(nn.Module):
                                    nn.LeakyReLU(),  # f(x) = max(0, x); f(x)=0 for neg x and f(x)=x for pos x; default act. f(x)
                                    nn.Linear(fc1_dims, fc2_dims),  # y = Wx + b; initializes random b w/ matrix out_features * 1 then W matrix out_features * in_features w/ random elements
                                    nn.LeakyReLU(),
+                                   # nn.Linear(fc1_dims, fc2_dims),
+                                   # nn.LeakyReLU(),
                                    nn.Linear(fc2_dims, n_actions),  # to find y, fc=nn.Linear(...) ==> y = fc(x)
                                    nn.Softmax(dim=-1)  # squash inputs to probability outputs [0, 1]; used for last layer in multi class classification problems
                                    )
