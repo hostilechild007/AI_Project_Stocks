@@ -8,7 +8,7 @@ from gym.utils import seeding
 
 # shares normalization factor
 # 100 shares per trade
-HMAX_NORMALIZE = 2
+HMAX_NORMALIZE = 1
 # initial amount of money we have in our account
 INITIAL_ACCOUNT_BALANCE = 100
 # initial amount of shares we have in our account
@@ -16,7 +16,7 @@ INITIAL_SHARES = 0
 # types of stocks we have
 STOCK_DIM = 1
 # rewards will be too high so lower it
-REWARD_SCALING = 10
+REWARD_SCALING = 1
 # transaction fee: 1/1000 reasonable percentage
 TRANSACTION_FEE_PERCENT = 0.001
 # quarterly days to determine when account should reset

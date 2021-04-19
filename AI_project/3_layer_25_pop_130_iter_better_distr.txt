@@ -1,0 +1,12 @@
+gamma: 0.8625507431853898
+alpha: 2.3370413852163037e-05
+gae_lambda: 0.9237578563146968
+policy_clip: 0.21815240923726395
+num_epoch: 5
+batch_size: 32
+buffer_size: 2048
+hidden_units1: 192
+hidden_units2: 259
+hidden_units3: 85
+recent score: 6.9534284115234755 avg score of last 100 steps: 5.3152482330957085
+total profits: 6.759700990001562

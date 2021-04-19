@@ -14,14 +14,15 @@ class Agent:
     # alpha: learning rate
     # n: num of steps before we update
     # gae_lambda: Generalized Advantage Estimation Lambda as smoothing parameter in Advantage Estimate
-    def __init__(self, n_actions, input_dims, gamma=.99, alpha=.003, gae_lambda=.95, policy_clip=.2, batch_size=64, n=2048, n_epochs=10):
+    def __init__(self, n_actions, input_dims, gamma=.99, alpha=.003, gae_lambda=.95, policy_clip=.2, batch_size=64,
+                 n_epochs=10, fc1_dims=256, fc2_dims=256, fc3_dims=256):
         self.gamma = gamma
         self.gae_lambda = gae_lambda
         self.policy_clip = policy_clip
         self.n_epochs = n_epochs
 
-        self.actor = ActorNetwork(n_actions, input_dims, alpha)
-        self.critic = CriticNetwork(input_dims, alpha)
+        self.actor = ActorNetwork(n_actions, input_dims, alpha, fc1_dims, fc2_dims, fc3_dims)
+        self.critic = CriticNetwork(input_dims, alpha, fc1_dims, fc2_dims, fc3_dims)
         self.memory = PPOMemory(batch_size)
 
     # interface between agent and its memory
@@ -44,6 +45,7 @@ class Agent:
         # Note: any .tensor(np_array).to(device) converts np to torch in CPU or GPU device
         state = T.tensor([observation], dtype=T.float).to(self.actor.device)
 
+        print("state in choose_action(): ", state)
         dist = self.actor(state)  # gets prob distribution for choosing an action
         print("distributions: ", dist.probs)
         value = self.critic(state)
@@ -60,15 +62,17 @@ class Agent:
 
     def learn(self):
         for _ in range(self.n_epochs):
+            print("epoch", _)
             states_arr, actions_arr, old_probs_arr, vals_arr, rewards_arr, dones_arr, batches = self.memory.generate_batches()
 
             advantage = np.zeros(len(rewards_arr), dtype=np.float32)  # stores gae's
-
             for t in range(len(rewards_arr) - 1):
+                # print("t: ", t)
                 discount = 1
                 a_t = 0  # the Advantage
 
                 for k in range(t, len(rewards_arr) - 1):
+                    # print("k: ", k)
                     # mask = (1 - int(dones_arr[k])) cuz val of term state = 0 and no returns/rewards in terminal state
                     # otherwise, mask = 1 cuz not terminal state
                     delta = rewards_arr[k] + self.gamma * vals_arr[k+1] * (1 - int(dones_arr[k])) - vals_arr[k]
@@ -80,7 +84,6 @@ class Agent:
             advantage = T.tensor(advantage).to(self.actor.device)
 
             values = T.tensor(vals_arr).to(self.actor.device)
-
             # note: batch = an array with random indices
             for batch in batches:
                 states = T.tensor(states_arr[batch], dtype=T.float).to(self.actor.device)
@@ -108,7 +111,6 @@ class Agent:
 
                 # don't need to add entropy cuz have 2 separate NN for actor & critic
                 total_loss = actor_loss + .5*critic_loss
-                print("total_loss: ", total_loss)
 
                 # Note: optimizer is connected to .backward() cuz of the input self.parameters()
                 # clears x.grad for every parameter x in the optimizer

@@ -15,7 +15,6 @@ if __name__ == '__main__':
     batch_size = 5
     n_epochs = 4
     alpha = 0.0003  # learning rate
-    # alpha = 0.0001  # learning rate
     agent = Agent(n_actions=env.action_space.n, batch_size=batch_size, alpha=alpha, n_epochs=n_epochs,
                   input_dims=env.observation_space.shape)
     n_games = 300  # episodes so have starting and terminal state so can end
